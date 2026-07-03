@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build and release
+  build:
+    name: Build
     runs-on: self-hosted
 
     strategy:
@@ -19,54 +19,73 @@ jobs:
         include:
           - goos: linux
             goarch: amd64
-            ext: ""
+            name: linux-amd64
           - goos: darwin
             goarch: amd64
-            ext: ""
+            name: darwin-amd64
           - goos: darwin
             goarch: arm64
-            ext: ""
+            name: darwin-arm64
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-          cache: true
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          mkdir -p release
+          go build -trimpath -ldflags="-s -w" -o sentiary-mcp .
+          tar -czf "release/sentiary-mcp-${{ matrix.name }}.tar.gz" sentiary-mcp
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentiary-mcp-${{ matrix.name }}
+          path: release/sentiary-mcp-${{ matrix.name }}.tar.gz
+          retention-days: 1
+
+  release:
+    name: Create release
+    needs: build
+    runs-on: self-hosted
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Resolve version
         id: version
         shell: bash
         run: |
           short_sha="${GITHUB_SHA::7}"
-          echo "version=v$(date -u +%Y.%m.%d)-${short_sha}" >> "$GITHUB_OUTPUT"
+          version="v$(date -u +%Y.%m.%d)-${short_sha}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
-      - name: Build
-        shell: bash
-        env:
-          CGO_ENABLED: "0"
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Create tag
         run: |
-          mkdir -p dist
-          binary="sentiary-mcp-${GOOS}-${GOARCH}${{ matrix.ext }}"
-          go build -trimpath -ldflags="-s -w" -o "dist/${binary}" .
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.version }}" -m "Release ${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
 
-      - name: Package
-        id: package
-        shell: bash
-        run: |
-          cd dist
-          asset="sentiary-mcp-${{ matrix.goos }}-${{ matrix.goarch }}"
-          tar -czf "${asset}.tar.gz" "${asset}"
-          echo "asset=dist/${asset}.tar.gz" >> "$GITHUB_OUTPUT"
-
-      - name: Publish release asset
+      - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
@@ -74,4 +93,8 @@ jobs:
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
           make_latest: true
-          files: ${{ steps.package.outputs.asset }}
+          files: release/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
