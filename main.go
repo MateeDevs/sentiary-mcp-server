@@ -115,7 +115,7 @@ func runHTTP() {
 // "<key>"). Returns an empty string when no key is supplied, in which case the
 // caller falls back to the server environment.
 func apiKeyFromRequest(request *http.Request) string {
-	if request == nil {
+	if request == nil || request.Header == nil {
 		return ""
 	}
 	if key := strings.TrimSpace(request.Header.Get("X-Sentiary-User-Api-Key")); key != "" {
@@ -125,9 +125,19 @@ func apiKeyFromRequest(request *http.Request) string {
 	if authorization == "" {
 		return ""
 	}
-	if _, token, found := strings.Cut(authorization, " "); found {
-		return strings.TrimSpace(token)
+	// Strip a recognised scheme prefix ("Bearer <key>" / "Ribbon <key>").
+	if scheme, token, found := strings.Cut(authorization, " "); found {
+		switch strings.ToLower(scheme) {
+		case "bearer", "ribbon":
+			return strings.TrimSpace(token)
+		}
 	}
+	// A lone scheme keyword carries no key; fall back to the environment.
+	switch strings.ToLower(authorization) {
+	case "bearer", "ribbon":
+		return ""
+	}
+	// Otherwise treat the whole header value as a bare token.
 	return authorization
 }
 
