@@ -22,21 +22,19 @@ func main() {
 		return
 	}
 
-	server := newServer()
-
 	if transportMode() == "http" {
-		runHTTP(server)
+		runHTTP()
 		return
 	}
 
+	server := newServer(sentiary.ConfigFromEnv())
 	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 		log.Printf("mcp server stopped: %v", err)
 		os.Exit(1)
 	}
 }
 
-func newServer() *mcp.Server {
-	cfg := sentiary.ConfigFromEnv()
+func newServer(cfg sentiary.Config) *mcp.Server {
 	client := sentiary.NewClient(cfg, &http.Client{Timeout: 30 * time.Second})
 
 	server := mcp.NewServer(&mcp.Implementation{
@@ -75,14 +73,25 @@ func transportMode() string {
 	return strings.ToLower(strings.TrimSpace(os.Getenv("MCP_TRANSPORT")))
 }
 
-func runHTTP(server *mcp.Server) {
+func runHTTP() {
 	port := strings.TrimSpace(os.Getenv("PORT"))
 	if port == "" {
 		port = "8080"
 	}
 
-	handler := mcp.NewStreamableHTTPHandler(func(_ *http.Request) *mcp.Server {
-		return server
+	baseConfig := sentiary.ConfigFromEnv()
+
+	// Build a fresh server per MCP session so a single hosted instance can serve
+	// many users, each supplying their own API key from their MCP client. The
+	// go-sdk calls this factory once per session (on initialize), where the
+	// Authorization header is available. When no per-request key is present we
+	// fall back to SENTIARY_USER_API_KEY from the environment.
+	handler := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {
+		cfg := baseConfig
+		if key := apiKeyFromRequest(request); key != "" {
+			cfg.APIKey = key
+		}
+		return newServer(cfg)
 	}, nil)
 
 	mux := http.NewServeMux()
@@ -98,6 +107,28 @@ func runHTTP(server *mcp.Server) {
 		log.Printf("mcp http server stopped: %v", err)
 		os.Exit(1)
 	}
+}
+
+// apiKeyFromRequest extracts a per-user Sentiary API key from the incoming HTTP
+// request. It accepts either a dedicated "X-Sentiary-User-Api-Key" header or a
+// standard "Authorization" header ("Bearer <key>", "Ribbon <key>", or a bare
+// "<key>"). Returns an empty string when no key is supplied, in which case the
+// caller falls back to the server environment.
+func apiKeyFromRequest(request *http.Request) string {
+	if request == nil {
+		return ""
+	}
+	if key := strings.TrimSpace(request.Header.Get("X-Sentiary-User-Api-Key")); key != "" {
+		return key
+	}
+	authorization := strings.TrimSpace(request.Header.Get("Authorization"))
+	if authorization == "" {
+		return ""
+	}
+	if _, token, found := strings.Cut(authorization, " "); found {
+		return strings.TrimSpace(token)
+	}
+	return authorization
 }
 
 func registerTools(server *mcp.Server, client *sentiary.Client) {
