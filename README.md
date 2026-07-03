@@ -2,6 +2,22 @@
 
 Go MCP stdio server for project string management through the Sentiary REST API.
 
+## Install
+
+Install the latest release binary:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/MateeDevs/sentiary-mcp-server/main/install.sh | sh
+```
+
+Or install from source with Go:
+
+```sh
+go install github.com/MateeDevs/sentiary-mcp-server@latest
+```
+
+`go install` places `sentiary-mcp-server` in `$GOBIN` or `$GOPATH/bin`. Use `sentiary-mcp-server` as the MCP command when installing this way. The release installer installs the binary as `sentiary-mcp-server`.
+
 ## Configuration
 
 Configure credentials through environment variables in the MCP client config:
@@ -17,7 +33,7 @@ Example:
 {
   "mcpServers": {
     "sentiary": {
-      "command": "/path/to/sentiary/mcp/sentiary-mcp",
+      "command": "/path/to/sentiary/mcp/sentiary-mcp-server",
       "env": {
         "SENTIARY_PROJECT_ID": "project-id",
         "SENTIARY_USER_API_KEY": "user-project-api-key"
@@ -67,17 +83,17 @@ For agents without native skill support, paste the contents of `SKILL.md` into t
 ## Build
 
 ```sh
-go build -o sentiary-mcp .
+go build -o sentiary-mcp-server .
 ```
 
 ## Docker
 
 ```sh
-docker build -t sentiary-mcp .
+docker build -t sentiary-mcp-server .
 docker run --rm -p 8080:8080 \
   -e SENTIARY_PROJECT_ID=project-id \
   -e SENTIARY_USER_API_KEY=user-project-api-key \
-  sentiary-mcp
+  sentiary-mcp-server
 ```
 
 The container runs streamable HTTP MCP on `$PORT` at `/` and exposes `GET /healthz`.

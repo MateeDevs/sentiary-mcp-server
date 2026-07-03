@@ -7,18 +7,18 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/sentiary-mcp .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/sentiary-mcp-server .
 
 FROM alpine:3.22 AS runtime
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 
-COPY --from=build /out/sentiary-mcp /app/sentiary-mcp
+COPY --from=build /out/sentiary-mcp-server /app/sentiary-mcp-server
 
 ENV MCP_TRANSPORT=http
 ENV PORT=8080
 EXPOSE 8080
 
 USER app
-ENTRYPOINT ["/app/sentiary-mcp"]
+ENTRYPOINT ["/app/sentiary-mcp-server"]
 CMD ["http"]

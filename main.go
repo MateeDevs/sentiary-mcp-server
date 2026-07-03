@@ -2,19 +2,26 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"strings"
 	"time"
 
+	"github.com/MateeDevs/sentiary-mcp-server/internal/sentiary"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/sentiary/mcp/internal/sentiary"
 )
 
-const version = "0.1.0"
+var version = "dev"
 
 func main() {
+	if isVersionCommand() {
+		fmt.Println(versionString())
+		return
+	}
+
 	server := newServer()
 
 	if transportMode() == "http" {
@@ -40,6 +47,25 @@ func newServer() *mcp.Server {
 
 	registerTools(server, client)
 	return server
+}
+
+func isVersionCommand() bool {
+	if len(os.Args) <= 1 {
+		return false
+	}
+	arg := strings.ToLower(strings.TrimSpace(os.Args[1]))
+	return arg == "version" || arg == "--version" || arg == "-v"
+}
+
+func versionString() string {
+	if version != "" && version != "dev" {
+		return version
+	}
+	buildInfo, ok := debug.ReadBuildInfo()
+	if ok && buildInfo.Main.Version != "" && buildInfo.Main.Version != "(devel)" {
+		return buildInfo.Main.Version
+	}
+	return version
 }
 
 func transportMode() string {

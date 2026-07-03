@@ -2,6 +2,6 @@
 .gitignore
 Dockerfile
 README.md
-sentiary-mcp
+sentiary-mcp-server
 *.test
 coverage.out

@@ -1,4 +1,4 @@
-module github.com/sentiary/mcp
+module github.com/MateeDevs/sentiary-mcp-server
 
 go 1.25.5
 
