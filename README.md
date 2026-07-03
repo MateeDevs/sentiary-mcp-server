@@ -82,13 +82,3 @@ docker run --rm -p 8080:8080 \
 
 The container runs streamable HTTP MCP on `$PORT` at `/` and exposes `GET /healthz`.
 
-## Railway
-
-Deploy from the `mcp/` directory using `mcp/Dockerfile`.
-
-Set variables:
-
-- `SENTIARY_USER_API_KEY`
-- `SENTIARY_PROJECT_ID` if you want a default project
-
-Railway provides `PORT`; the image defaults to `8080` locally.
