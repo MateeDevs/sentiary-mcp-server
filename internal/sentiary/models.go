@@ -27,6 +27,12 @@ type GetStringInput struct {
 	StringID  string `json:"stringId" jsonschema:"String/term ID."`
 }
 
+type GetStringByKeyInput struct {
+	ProjectID          string   `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
+	Key                string   `json:"key" jsonschema:"String key/name to fetch exactly."`
+	IncludeLanguageIDs []string `json:"includeLanguageIds,omitempty" jsonschema:"Translation language IDs to include in the string."`
+}
+
 type AddStringInput struct {
 	ProjectID   string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
 	Name        string `json:"name" jsonschema:"String name/key."`

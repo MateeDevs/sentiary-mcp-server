@@ -22,7 +22,8 @@ Use these Sentiary MCP tools:
 
 - `list_project_strings` — list strings with pagination and optional translations.
 - `search_project_string_by_name` — search by string key/name only.
-- `get_project_string` — fetch one string with translations.
+- `get_project_string` — fetch one string by internal ID with translations.
+- `get_project_string_by_key` — fetch one string by exact key/name with translations.
 - `add_project_string` — create one string and optionally set an initial translation.
 - `edit_project_string` — update string name, description, and context.
 - `remove_project_string` — remove one string and its translations.
@@ -35,7 +36,7 @@ Use these Sentiary MCP tools:
 ## Adding a String
 
 1. Identify the string key, description/context, source language, and translation text.
-2. Call `search_project_string_by_name` with `exact=true` for the key.
+2. Call `get_project_string_by_key` for the key when checking if it already exists.
 3. If the string exists, ask before overwriting unless the user explicitly requested an update.
 4. If it does not exist, call `add_project_string`.
 5. Add or update translations with `set_project_string_translation`.
@@ -43,15 +44,15 @@ Use these Sentiary MCP tools:
 
 ## Editing a String
 
-1. Find the string with `search_project_string_by_name` using `exact=true`.
-2. Fetch details with `get_project_string` when translation or metadata context is needed.
+1. Find the string with `get_project_string_by_key` when the user provides a key/name.
+2. Fetch details with `get_project_string` only when you already have the internal ID.
 3. Use `edit_project_string` for name, description, or context changes.
 4. Use `set_project_string_translation` for translation text changes.
 5. Use `remove_project_string_translation` only when the user clearly requested removal.
 
 ## Removing a String
 
-1. Search by exact key first.
+1. Fetch by exact key first with `get_project_string_by_key`.
 2. Confirm ambiguity if multiple matches exist.
 3. Use `remove_project_string` only for the intended string.
 4. Mention that all translations were removed with the string.

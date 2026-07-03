@@ -129,6 +129,15 @@ func registerTools(server *mcp.Server, client *sentiary.Client) {
 	})
 
 	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_project_string_by_key",
+		Title:       "Get project string by key",
+		Description: "Gets one string by exact key/name, including requested translations. Requires SENTIARY_USER_API_KEY.",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, input sentiary.GetStringByKeyInput) (*mcp.CallToolResult, sentiary.Term, error) {
+		output, err := client.GetStringByKey(ctx, input)
+		return nil, output, err
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
 		Name:        "add_project_string",
 		Title:       "Add project string",
 		Description: "Creates one string and optionally sets an initial translation. Requires SENTIARY_USER_API_KEY.",

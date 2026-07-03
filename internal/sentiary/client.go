@@ -218,6 +218,35 @@ func (c *Client) GetString(ctx context.Context, input GetStringInput) (Term, err
 	return output, nil
 }
 
+func (c *Client) GetStringByKey(ctx context.Context, input GetStringByKeyInput) (Term, error) {
+	projectID, err := c.projectID(input.ProjectID)
+	if err != nil {
+		return Term{}, err
+	}
+	key := strings.TrimSpace(input.Key)
+	if key == "" {
+		return Term{}, errors.New("key is required")
+	}
+
+	query := url.Values{}
+	for _, languageID := range input.IncludeLanguageIDs {
+		if trimmed := strings.TrimSpace(languageID); trimmed != "" {
+			query.Add("includeLanguage", trimmed)
+		}
+	}
+
+	endpoint, err := c.endpoint("project", projectID, "term", "key", key, query)
+	if err != nil {
+		return Term{}, err
+	}
+
+	var output Term
+	if err := c.doJSON(ctx, http.MethodGet, endpoint, nil, authAPIKey, &output); err != nil {
+		return Term{}, err
+	}
+	return output, nil
+}
+
 func (c *Client) AddString(ctx context.Context, input AddStringInput) (Term, error) {
 	projectID, err := c.projectID(input.ProjectID)
 	if err != nil {

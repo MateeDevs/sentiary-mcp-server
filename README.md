@@ -50,6 +50,7 @@ String management:
 - `list_project_strings`
 - `search_project_string_by_name`
 - `get_project_string`
+- `get_project_string_by_key`
 - `add_project_string`
 - `edit_project_string`
 - `remove_project_string`
