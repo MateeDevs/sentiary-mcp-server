@@ -126,7 +126,7 @@ type Term struct {
 	Updated      string        `json:"updated"`
 	AuthorEmail  *string       `json:"authorEmail"`
 	AuthorID     *string       `json:"authorId"`
-	Statistics   any           `json:"statistics"`
+	Statistics   any           `json:"statistics" jsonschema:"Arbitrary per-string statistics object returned by the Sentiary API; shape is not modelled."`
 	Context      *string       `json:"context"`
 }
 
