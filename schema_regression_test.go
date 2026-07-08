@@ -44,21 +44,23 @@ var toolSchemaTypes = []reflect.Type{
 // down every mcp__sentiary__* tool.
 func TestToolSchemasHaveNoBooleanProperties(t *testing.T) {
 	for _, rt := range toolSchemaTypes {
-		schema, err := jsonschema.ForType(rt, &jsonschema.ForOptions{})
-		if err != nil {
-			t.Fatalf("ForType(%s): %v", rt.Name(), err)
-		}
-		raw, err := json.Marshal(schema)
-		if err != nil {
-			t.Fatalf("marshal schema for %s: %v", rt.Name(), err)
-		}
-		var doc any
-		if err := json.Unmarshal(raw, &doc); err != nil {
-			t.Fatalf("unmarshal schema for %s: %v", rt.Name(), err)
-		}
-		if paths := booleanPropertyPaths(doc, rt.Name()); len(paths) > 0 {
-			t.Errorf("type %s emits boolean-valued property subschema(s): %v\nschema: %s", rt.Name(), paths, raw)
-		}
+		t.Run(rt.String(), func(t *testing.T) {
+			schema, err := jsonschema.ForType(rt, &jsonschema.ForOptions{})
+			if err != nil {
+				t.Fatalf("ForType: %v", err)
+			}
+			raw, err := json.Marshal(schema)
+			if err != nil {
+				t.Fatalf("marshal schema: %v", err)
+			}
+			var doc any
+			if err := json.Unmarshal(raw, &doc); err != nil {
+				t.Fatalf("unmarshal schema: %v", err)
+			}
+			if paths := booleanPropertyPaths(doc, rt.String()); len(paths) > 0 {
+				t.Errorf("emits boolean-valued property subschema(s): %v\nschema: %s", paths, raw)
+			}
+		})
 	}
 }
 
