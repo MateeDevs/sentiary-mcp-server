@@ -99,3 +99,38 @@ docker run --rm -p 8080:8080 \
 
 The container runs streamable HTTP MCP on `$PORT` at `/` and exposes `GET /healthz`.
 
+### Per-user API keys over HTTP
+
+A single hosted HTTP instance can serve many users, each supplying their own
+Sentiary API key from their MCP client instead of sharing the server's
+environment key. On session initialize the server reads the key from the request
+in this order:
+
+1. `X-Sentiary-User-Api-Key: <key>`
+2. `Authorization: Bearer <key>` (also accepts `Ribbon <key>` or a bare `<key>`)
+3. Falls back to `SENTIARY_USER_API_KEY` from the server environment when no
+   per-request key is sent.
+
+This means `SENTIARY_USER_API_KEY` is optional when clients provide their own
+key, and `SENTIARY_PROJECT_ID` can be omitted so each user targets their own
+project via the per-tool `projectId` argument (or their own default).
+
+Example MCP client config against a hosted server:
+
+```json
+{
+  "mcpServers": {
+    "sentiary": {
+      "type": "http",
+      "url": "https://sentiary-mcp.example.com/",
+      "headers": {
+        "Authorization": "Bearer user-project-api-key"
+      }
+    }
+  }
+}
+```
+
+> Note: the key is only read when the MCP session is established. Each user gets
+> an isolated session bound to their own key.
+
