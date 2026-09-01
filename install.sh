@@ -2,7 +2,7 @@
 set -eu
 
 REPO="MateeDevs/sentiary-mcp-server"
-BINARY="sentiary-mcp-server"
+BINARY="sentiary-cli"
 
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
 arch="$(uname -m)"
@@ -27,11 +27,6 @@ case "$arch" in
     exit 1
     ;;
 esac
-
-if [ "$os" = "linux" ] && [ "$arch" = "arm64" ]; then
-  echo "linux/arm64 is not published." >&2
-  exit 1
-fi
 
 asset="${BINARY}-${os}-${arch}"
 archive="${asset}.tar.gz"
@@ -66,7 +61,7 @@ if [ -f "$tmp_dir/$asset" ]; then
 elif [ -f "$tmp_dir/$BINARY" ]; then
   source_binary="$tmp_dir/$BINARY"
 else
-  echo "Archive does not contain $asset or $BINARY." >&2
+  echo "The archive does not contain $asset or $BINARY." >&2
   exit 1
 fi
 

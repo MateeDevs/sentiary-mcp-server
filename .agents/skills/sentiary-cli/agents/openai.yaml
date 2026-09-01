@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sentiary CLI"
+  short_description: "Manage Sentiary projects from the terminal"
+  default_prompt: "Use $sentiary-cli to list my Sentiary projects and their languages."

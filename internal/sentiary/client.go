@@ -157,16 +157,20 @@ func (c *Client) ListStrings(ctx context.Context, input ListStringsInput) (Pagin
 	return output, nil
 }
 
-func (c *Client) SearchStringsByName(ctx context.Context, input SearchStringInput) (Paging, error) {
-	name := strings.TrimSpace(input.Name)
-	if name == "" {
-		return Paging{}, errors.New("name is required")
+func (c *Client) SearchStrings(ctx context.Context, input SearchStringsInput) (Paging, error) {
+	searchQuery := strings.TrimSpace(input.Query)
+	if searchQuery == "" {
+		return Paging{}, errors.New("query is required")
 	}
 
 	listInput := ListStringsInput{
 		ProjectID:          input.ProjectID,
 		Size:               input.Size,
+		Cursor:             input.Cursor,
 		IncludeLanguageIDs: input.IncludeLanguageIDs,
+		Filter:             input.Filter,
+		FilterLanguage:     input.FilterLanguage,
+		Order:              input.Order,
 	}
 	if listInput.Size <= 0 {
 		listInput.Size = 25
@@ -178,13 +182,17 @@ func (c *Client) SearchStringsByName(ctx context.Context, input SearchStringInpu
 	}
 
 	query := url.Values{}
-	query.Set("query", name)
+	query.Set("query", searchQuery)
 	query.Set("size", fmt.Sprintf("%d", listInput.Size))
+	setOptionalQuery(query, "cursor", listInput.Cursor)
 	for _, languageID := range listInput.IncludeLanguageIDs {
 		if trimmed := strings.TrimSpace(languageID); trimmed != "" {
 			query.Add("includeLanguage", trimmed)
 		}
 	}
+	setOptionalQuery(query, "filter", listInput.Filter)
+	setOptionalQuery(query, "filterLanguage", listInput.FilterLanguage)
+	setOptionalQuery(query, "order", listInput.Order)
 
 	endpoint, err := c.endpoint("project", projectID, "term", query)
 	if err != nil {
@@ -196,7 +204,6 @@ func (c *Client) SearchStringsByName(ctx context.Context, input SearchStringInpu
 		return Paging{}, err
 	}
 
-	output.Items = filterTermsByName(output.Items, name, input.Exact)
 	return output, nil
 }
 
@@ -462,7 +469,7 @@ func (c *Client) do(ctx context.Context, method string, endpoint string, body io
 func (c *Client) authorize(request *http.Request, _ authMode) error {
 	apiKey := strings.TrimSpace(c.config.APIKey)
 	if apiKey == "" {
-		return errors.New("missing API key: set SENTIARY_USER_API_KEY in the MCP server environment")
+		return errors.New("missing API key: set SENTIARY_USER_API_KEY")
 	}
 	request.Header.Set("Authorization", "Ribbon "+apiKey)
 	return nil
@@ -560,18 +567,4 @@ func textBody(value string) io.Reader {
 		Reader:      strings.NewReader(value),
 		contentType: "text/plain; charset=utf-8",
 	}
-}
-
-func filterTermsByName(terms []Term, name string, exact bool) []Term {
-	filtered := make([]Term, 0, len(terms))
-	for _, term := range terms {
-		if exact && term.Name == name {
-			filtered = append(filtered, term)
-			continue
-		}
-		if !exact && strings.Contains(strings.ToLower(term.Name), strings.ToLower(name)) {
-			filtered = append(filtered, term)
-		}
-	}
-	return filtered
 }
