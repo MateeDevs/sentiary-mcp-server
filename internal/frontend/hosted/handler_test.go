@@ -121,7 +121,7 @@ func TestRequestAPIKeyReachesSentiaryAPI(t *testing.T) {
 	})}
 
 	transport := &mcp.StreamableClientTransport{
-		Endpoint:             "https://mcp.test",
+		Endpoint:             "https://mcp.test/",
 		HTTPClient:           authenticatedClient,
 		DisableStandaloneSSE: true,
 	}
