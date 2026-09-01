@@ -1,54 +1,215 @@
-# Sentiary MCP
+# Sentiary Tools
 
-Go MCP stdio server for project string management through the Sentiary REST API.
+This project provides two frontends for the Sentiary REST API.
 
-## Install
+- `sentiary-cli` provides direct terminal commands.
+- `sentiary-mcp` provides a hosted streamable HTTP MCP service.
 
-Install the latest release binary:
+Both frontends use the API contract and client in `internal/sentiary`.
+
+## Install the CLI
+
+Install the latest release:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/MateeDevs/sentiary-mcp-server/main/install.sh | sh
 ```
 
-Or install from source with Go:
+On Windows, run this command in PowerShell:
 
-```sh
-go install github.com/MateeDevs/sentiary-mcp-server@latest
+```powershell
+irm https://raw.githubusercontent.com/MateeDevs/sentiary-mcp-server/main/install.ps1 | iex
 ```
 
-`go install` places `sentiary-mcp-server` in `$GOBIN` or `$GOPATH/bin`. Use `sentiary-mcp-server` as the MCP command when installing this way. The release installer installs the binary as `sentiary-mcp-server`.
+The installers support AMD64 and ARM64 on macOS, Linux, and Windows.
 
-## Configuration
+You can also install the CLI from source:
 
-Configure credentials through environment variables in the MCP client config:
+```sh
+git clone https://github.com/MateeDevs/sentiary-mcp-server.git
+cd sentiary-mcp-server
+go install ./cmd/sentiary-cli
+```
 
-- `SENTIARY_USER_API_KEY` — required. Use the current user's project API key from `/project/{projectId}/userApiKey`; sent as `Authorization: Ribbon <key>`.
-- `SENTIARY_PROJECT_ID` — optional default project ID.
+Set the user API key before you run a command:
 
-The API base URL is fixed to `https://api.sentiary.com/`.
+```sh
+export SENTIARY_USER_API_KEY="user-api-key"
+```
 
-Example:
+You can set `SENTIARY_PROJECT_ID` as the default project ID. A command-level `--project-id` value takes precedence.
+
+## CLI commands
+
+Export Czech strings as JSON to standard output:
+
+```sh
+sentiary-cli export \
+  --project-id="asdf" \
+  --format="json" \
+  --language="cs_CZ"
+```
+
+Write the export to a file:
+
+```sh
+sentiary-cli export \
+  --project-id="asdf" \
+  --format="json" \
+  --language="cs_CZ" \
+  --output="strings.json"
+```
+
+Import a file:
+
+```sh
+sentiary-cli import \
+  --project-id="asdf" \
+  --format="json" \
+  --language="cs_CZ" \
+  --input="strings.json"
+```
+
+Use `-` as the input or output path for a standard stream.
+
+Available commands:
+
+- Projects: `list-projects`, `get-project`, `create-project`, `edit-project`, `remove-project`
+- Languages: `list-languages`, `list-project-languages`, `add-project-language`, `remove-project-language`
+- Members: `list-project-members`, `set-project-member-role`, `remove-project-member`
+- Invitations: `list-invitations`, `create-invitation`, `accept-invitation`, `decline-invitation`, `list-project-invitations`, `remove-project-invitation`
+- `list`
+- `search`
+- `get`
+- `add`
+- `edit`
+- `remove`
+- `set-translation`
+- `remove-translation`
+- `info`
+- `export`
+- `import`
+
+Run `sentiary-cli <command> --help` to see the command options.
+
+Create a project and add Czech:
+
+```sh
+sentiary-cli create-project --name="Mobile app"
+sentiary-cli add-project-language \
+  --project-id="asdf" \
+  --language="cs_CZ"
+```
+
+Invite a developer:
+
+```sh
+sentiary-cli create-invitation \
+  --project-id="asdf" \
+  --user-email="developer@example.com" \
+  --role="developer"
+```
+
+Member and invitation roles are `administrator`, `developer`, and `translator`.
+
+Search keys, translations, descriptions, and context:
+
+```sh
+sentiary-cli search \
+  --project-id="asdf" \
+  --query="Ahoj"
+```
+
+## Hosted MCP
+
+The hosted frontend reads the user API key when it creates an MCP session. Each session gets a separate API client.
+
+The hosted frontend reads the key from the first available source:
+
+1. `X-Sentiary-User-Api-Key: <key>`
+2. `Authorization: Bearer <key>`
+3. `Authorization: Ribbon <key>`
+4. `SENTIARY_USER_API_KEY` in the service environment
+
+The `Authorization` header can also contain a bare API key.
+
+Example MCP client configuration:
 
 ```json
 {
   "mcpServers": {
     "sentiary": {
-      "command": "/path/to/sentiary/mcp/sentiary-mcp-server",
-      "env": {
-        "SENTIARY_PROJECT_ID": "project-id",
-        "SENTIARY_USER_API_KEY": "user-project-api-key"
+      "type": "http",
+      "url": "https://mcp.example.com/",
+      "headers": {
+        "Authorization": "Bearer user-api-key"
       }
     }
   }
 }
 ```
 
-## Tools
+The hosted frontend uses port `8080` by default. Set `PORT` to use a different port.
 
-String management:
+The service exposes MCP at `/` and its health check at `/healthz`.
+
+## Build
+
+Build both frontends:
+
+```sh
+mkdir -p bin
+go build -o bin/sentiary-cli ./cmd/sentiary-cli
+go build -o bin/sentiary-mcp ./cmd/sentiary-mcp
+```
+
+## Docker
+
+Build and run the hosted frontend:
+
+```sh
+docker build -t sentiary-mcp .
+docker run --rm -p 8080:8080 sentiary-mcp
+```
+
+Clients can send their own API keys. The container does not need a shared API key.
+
+## MCP tools
+
+Project tools:
+
+- `list_projects`
+- `get_project`
+- `create_project`
+- `edit_project`
+- `remove_project`
+
+Language tools:
+
+- `list_supported_languages`
+- `list_project_languages`
+- `add_project_language`
+- `remove_project_language`
+
+Member tools:
+
+- `list_project_members`
+- `set_project_member_role`
+- `remove_project_member`
+
+Invitation tools:
+
+- `list_invitations`
+- `create_invitation`
+- `accept_invitation`
+- `decline_invitation`
+- `list_project_invitations`
+- `remove_project_invitation`
+
+String tools:
 
 - `list_project_strings`
-- `search_project_string_by_name`
+- `search_project_strings`
 - `get_project_string`
 - `get_project_string_by_key`
 - `add_project_string`
@@ -57,80 +218,17 @@ String management:
 - `set_project_string_translation`
 - `remove_project_string_translation`
 
-Batch operations:
+Batch tools:
 
 - `get_project_strings_info`
 - `export_project_strings`
 - `import_project_strings`
 
-All tools use `Authorization: Ribbon <api-key>`. For string-management tools, use a user API key so Sentiary resolves the request to the normal user principal. Project-wide API keys still exist for batch-style automation but do not carry user identity. Supported batch formats: `json`, `android`, `apple`, `compose`.
+The batch tools support `json`, `android`, `apple`, and `compose` formats.
 
-## Agent Skill
+## Agent skill
 
-This repository includes a reusable agent skill for localization workflows:
+The repository includes two agent skills:
 
-- `sentiary-localization` — use Sentiary MCP tools to add, edit, remove, import, export, and sync project strings with local localization files.
-
-The skill lives at `.agents/skills/sentiary-localization/SKILL.md` and is intended to be versioned with the MCP server repository. It can be adapted by any MCP-capable agent workflow that supports reusable instruction files.
-
-### Add the skill to an agent
-
-1. Configure this MCP server in your AI client with `SENTIARY_PROJECT_ID` and `SENTIARY_USER_API_KEY`.
-2. Copy or reference `.agents/skills/sentiary-localization/SKILL.md` in your agent's reusable instructions/skills directory.
-3. Tell the agent to use the `sentiary-localization` skill when working with project strings or localization files.
-
-For agents without native skill support, paste the contents of `SKILL.md` into the agent's project instructions or custom system instructions.
-
-## Build
-
-```sh
-go build -o sentiary-mcp-server .
-```
-
-## Docker
-
-```sh
-docker build -t sentiary-mcp-server .
-docker run --rm -p 8080:8080 \
-  -e SENTIARY_PROJECT_ID=project-id \
-  -e SENTIARY_USER_API_KEY=user-project-api-key \
-  sentiary-mcp-server
-```
-
-The container runs streamable HTTP MCP on `$PORT` at `/` and exposes `GET /healthz`.
-
-### Per-user API keys over HTTP
-
-A single hosted HTTP instance can serve many users, each supplying their own
-Sentiary API key from their MCP client instead of sharing the server's
-environment key. On session initialize the server reads the key from the request
-in this order:
-
-1. `X-Sentiary-User-Api-Key: <key>`
-2. `Authorization: Bearer <key>` (also accepts `Ribbon <key>` or a bare `<key>`)
-3. Falls back to `SENTIARY_USER_API_KEY` from the server environment when no
-   per-request key is sent.
-
-This means `SENTIARY_USER_API_KEY` is optional when clients provide their own
-key, and `SENTIARY_PROJECT_ID` can be omitted so each user targets their own
-project via the per-tool `projectId` argument (or their own default).
-
-Example MCP client config against a hosted server:
-
-```json
-{
-  "mcpServers": {
-    "sentiary": {
-      "type": "http",
-      "url": "https://sentiary-mcp.example.com/",
-      "headers": {
-        "Authorization": "Bearer user-project-api-key"
-      }
-    }
-  }
-}
-```
-
-> Note: the key is only read when the MCP session is established. Each user gets
-> an isolated session bound to their own key.
-
+- [`sentiary-cli`](https://github.com/MateeDevs/sentiary-mcp-server/tree/main/.agents/skills/sentiary-cli) manages Sentiary through the CLI.
+- [`sentiary-mcp`](https://github.com/MateeDevs/sentiary-mcp-server/tree/main/.agents/skills/sentiary-mcp) manages Sentiary through MCP.

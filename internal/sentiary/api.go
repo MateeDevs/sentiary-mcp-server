@@ -1,0 +1,36 @@
+package sentiary
+
+import "context"
+
+type API interface {
+	ListProjects(context.Context) ([]Project, error)
+	CreateProject(context.Context, CreateProjectInput) (Project, error)
+	GetProject(context.Context, ProjectInput) (ProjectWithMembership, error)
+	EditProject(context.Context, EditProjectInput) (ProjectWithMembership, error)
+	RemoveProject(context.Context, ProjectInput) (DeleteOutput, error)
+	ListLanguages(context.Context, ListLanguagesInput) ([]Language, error)
+	ListProjectLanguages(context.Context, ListProjectLanguagesInput) ([]Language, error)
+	AddProjectLanguage(context.Context, ProjectLanguageInput) ([]Language, error)
+	RemoveProjectLanguage(context.Context, ProjectLanguageInput) ([]Language, error)
+	ListProjectMembers(context.Context, ProjectInput) ([]ProjectMember, error)
+	SetProjectMemberRole(context.Context, SetProjectMemberRoleInput) ([]ProjectMember, error)
+	RemoveProjectMember(context.Context, ProjectMemberInput) ([]ProjectMember, error)
+	ListInvitations(context.Context) ([]Invitation, error)
+	CreateInvitation(context.Context, CreateInvitationInput) (OperationOutput, error)
+	AcceptInvitation(context.Context, InvitationInput) (OperationOutput, error)
+	DeclineInvitation(context.Context, InvitationInput) (OperationOutput, error)
+	ListProjectInvitations(context.Context, ProjectInput) ([]Invitation, error)
+	RemoveProjectInvitation(context.Context, ProjectInvitationInput) (DeleteOutput, error)
+	ListStrings(context.Context, ListStringsInput) (Paging, error)
+	SearchStrings(context.Context, SearchStringsInput) (Paging, error)
+	GetString(context.Context, GetStringInput) (Term, error)
+	GetStringByKey(context.Context, GetStringByKeyInput) (Term, error)
+	AddString(context.Context, AddStringInput) (Term, error)
+	EditString(context.Context, EditStringInput) (Term, error)
+	RemoveString(context.Context, RemoveStringInput) (DeleteOutput, error)
+	SetStringTranslation(context.Context, SetTranslationInput) (Term, error)
+	RemoveStringTranslation(context.Context, RemoveTranslationInput) (Term, error)
+	GetProjectBatchInfo(context.Context, string) (ProjectBatchInfo, error)
+	ExportStrings(context.Context, ExportInput) (ExportOutput, error)
+	ImportStrings(context.Context, ImportInput) (ImportResult, error)
+}

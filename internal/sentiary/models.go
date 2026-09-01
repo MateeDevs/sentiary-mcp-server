@@ -4,22 +4,75 @@ type ProjectInput struct {
 	ProjectID string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
 }
 
+type CreateProjectInput struct {
+	Name string `json:"name" jsonschema:"Project name."`
+}
+
+type EditProjectInput struct {
+	ProjectID string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
+	Name      string `json:"name" jsonschema:"New project name."`
+}
+
+type ListLanguagesInput struct {
+	InLanguage string `json:"inLanguage,omitempty" jsonschema:"Language ID for translated language names. The API uses the authenticated user's language when empty."`
+}
+
+type ListProjectLanguagesInput struct {
+	ProjectID  string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
+	InLanguage string `json:"inLanguage,omitempty" jsonschema:"Language ID for translated language names. The API uses the authenticated user's language when empty."`
+}
+
+type ProjectLanguageInput struct {
+	ProjectID  string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
+	LanguageID string `json:"languageId" jsonschema:"IETF BCP 47 language ID to add or remove."`
+	InLanguage string `json:"inLanguage,omitempty" jsonschema:"Language ID for translated language names. The API uses the authenticated user's language when empty."`
+}
+
+type ProjectMemberInput struct {
+	ProjectID string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
+	UserID    string `json:"userId" jsonschema:"Sentiary user ID."`
+}
+
+type SetProjectMemberRoleInput struct {
+	ProjectID string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
+	UserID    string `json:"userId" jsonschema:"Sentiary user ID."`
+	Role      string `json:"role" jsonschema:"Member role: administrator, developer, or translator."`
+}
+
+type CreateInvitationInput struct {
+	ProjectID string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
+	UserEmail string `json:"userEmail" jsonschema:"Email address of the user to invite."`
+	Role      string `json:"role" jsonschema:"Invited member role: administrator, developer, or translator."`
+}
+
+type InvitationInput struct {
+	InvitationID string `json:"invitationId" jsonschema:"Invitation ID."`
+}
+
+type ProjectInvitationInput struct {
+	ProjectID    string `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
+	InvitationID string `json:"invitationId" jsonschema:"Invitation ID."`
+}
+
 type ListStringsInput struct {
 	ProjectID          string   `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
 	Size               int      `json:"size,omitempty" jsonschema:"Maximum number of strings to return. Defaults to the API default."`
 	Cursor             string   `json:"cursor,omitempty" jsonschema:"Pagination cursor returned by a previous response."`
 	IncludeLanguageIDs []string `json:"includeLanguageIds,omitempty" jsonschema:"Translation language IDs to include in each string."`
-	Filter             string   `json:"filter,omitempty" jsonschema:"Optional API filter: ALL, TRANSLATED, UNTRANSLATED, or PARTIALLY_TRANSLATED."`
+	Filter             string   `json:"filter,omitempty" jsonschema:"Optional API filter: ALL, TRANSLATED, or NOT_TRANSLATED."`
 	FilterLanguage     string   `json:"filterLanguage,omitempty" jsonschema:"Language ID used by filter."`
 	Order              string   `json:"order,omitempty" jsonschema:"Optional API order, for example UPDATED_ASC or UPDATED_DESC."`
 }
 
-type SearchStringInput struct {
+type SearchStringsInput struct {
 	ProjectID          string   `json:"projectId,omitempty" jsonschema:"Project ID. Optional when SENTIARY_PROJECT_ID is configured."`
-	Name               string   `json:"name" jsonschema:"String name to search for. Results are filtered by term name only."`
-	Exact              bool     `json:"exact,omitempty" jsonschema:"When true, returns only exact name matches."`
+	Query              string   `json:"query" jsonschema:"Text to find in string keys, translations, descriptions, or context."`
 	Size               int      `json:"size,omitempty" jsonschema:"Maximum API page size to search. Defaults to 25."`
+	Cursor             string   `json:"cursor,omitempty" jsonschema:"Pagination cursor returned by a previous search response."`
 	IncludeLanguageIDs []string `json:"includeLanguageIds,omitempty" jsonschema:"Translation language IDs to include in each string."`
+	Filter             string   `json:"filter,omitempty" jsonschema:"Optional API filter: ALL, TRANSLATED, or NOT_TRANSLATED."`
+	FilterLanguage     string   `json:"filterLanguage,omitempty" jsonschema:"Language ID used by filter."`
+	Order              string   `json:"order,omitempty" jsonschema:"Optional API order, for example UPDATED_ASC or UPDATED_DESC."`
 }
 
 type GetStringInput struct {
@@ -126,7 +179,7 @@ type Term struct {
 	Updated      string        `json:"updated"`
 	AuthorEmail  *string       `json:"authorEmail"`
 	AuthorID     *string       `json:"authorId"`
-	Statistics   any           `json:"statistics" jsonschema:"Arbitrary per-string statistics object returned by the Sentiary API; shape is not modelled."`
+	Statistics   any           `json:"statistics" jsonschema:"Arbitrary per-string statistics object returned by the Sentiary API. The shape is not modeled."`
 	Context      *string       `json:"context"`
 }
 
@@ -140,4 +193,69 @@ type Translation struct {
 
 type DeleteOutput struct {
 	Deleted bool `json:"deleted"`
+}
+
+type OperationOutput struct {
+	Completed bool `json:"completed"`
+}
+
+type ProjectsOutput struct {
+	Projects []Project `json:"projects"`
+}
+
+type LanguagesOutput struct {
+	Languages []Language `json:"languages"`
+}
+
+type ProjectMembersOutput struct {
+	Members []ProjectMember `json:"members"`
+}
+
+type InvitationsOutput struct {
+	Invitations []Invitation `json:"invitations"`
+}
+
+type Project struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type Membership struct {
+	Role        string   `json:"role"`
+	Permissions []string `json:"permissions"`
+}
+
+type ProjectWithMembership struct {
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	Membership Membership `json:"membership"`
+}
+
+type Language struct {
+	LanguageID        string  `json:"languageId"`
+	LanguageName      string  `json:"languageName"`
+	LocalLanguageName string  `json:"localLanguageName"`
+	CountryEmoji      *string `json:"countryEmoji"`
+}
+
+type User struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	EmailAddress string `json:"emailAddress"`
+	IsAdmin      bool   `json:"isAdmin"`
+}
+
+type ProjectMember struct {
+	User User   `json:"user"`
+	Role string `json:"role"`
+}
+
+type Invitation struct {
+	InvitationID     string  `json:"inviteId"`
+	Project          Project `json:"project"`
+	Role             string  `json:"role"`
+	InvitedUserEmail string  `json:"invitedUserEmail"`
+	InvitedBy        *User   `json:"invitedBy"`
+	Accepted         bool    `json:"accepted"`
+	Declined         bool    `json:"declined"`
 }

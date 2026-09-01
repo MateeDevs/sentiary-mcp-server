@@ -1,11 +1,11 @@
 ---
-name: sentiary-localization
-description: Use Sentiary MCP tools to add, update, remove, and sync project localization strings between local string files and a Sentiary project.
+name: sentiary-mcp
+description: Use Sentiary MCP tools to manage projects, languages, members, invitations, strings, and localization files through a hosted MCP server.
 ---
 
-# Sentiary Localization
+# Sentiary MCP
 
-Use this skill when the user asks to manage project localization strings through Sentiary, add new strings, update translations, remove strings, or sync local string files with a Sentiary project.
+Use this skill when the user asks to manage Sentiary through the hosted MCP server.
 
 ## Requirements
 
@@ -20,8 +20,13 @@ Use this skill when the user asks to manage project localization strings through
 
 Use these Sentiary MCP tools:
 
+- `list_projects`, `get_project`, `create_project`, `edit_project`, and `remove_project` — manage projects.
+- `list_supported_languages`, `list_project_languages`, `add_project_language`, and `remove_project_language` — manage global and project languages.
+- `list_project_members`, `set_project_member_role`, and `remove_project_member` — manage project members and roles.
+- `list_invitations`, `create_invitation`, `accept_invitation`, `decline_invitation`, `list_project_invitations`, and `remove_project_invitation` — manage invitations.
+
 - `list_project_strings` — list strings with pagination and optional translations.
-- `search_project_string_by_name` — search by string key/name only.
+- `search_project_strings` — search keys, translations, descriptions, and context.
 - `get_project_string` — fetch one string by internal ID with translations.
 - `get_project_string_by_key` — fetch one string by exact key/name with translations.
 - `add_project_string` — create one string and optionally set an initial translation.
@@ -32,6 +37,16 @@ Use these Sentiary MCP tools:
 - `get_project_strings_info` — read project languages and batch metadata.
 - `export_project_strings` — export strings in `json`, `android`, `apple`, or `compose` format.
 - `import_project_strings` — import strings in `json`, `android`, `apple`, or `compose` format.
+
+Use `administrator`, `developer`, or `translator` for a member or invitation role.
+
+## Manage Access and Project Settings
+
+Read the current project, languages, members, or invitations before a targeted change when the relevant ID or current state is not known.
+
+Only remove a project, project language, member, or invitation when the user explicitly requests that change. A project removal deletes project data. A project language removal also deletes translations in that language. A member role change can change project permissions.
+
+Report the affected project, language, user, role, or invitation after the change.
 
 ## Adding a String
 
@@ -44,7 +59,7 @@ Use these Sentiary MCP tools:
 
 ## Editing a String
 
-1. Find the string with `get_project_string_by_key` when the user provides a key/name.
+1. Find the string with `get_project_string_by_key` when the user provides an exact key.
 2. Fetch details with `get_project_string` only when you already have the internal ID.
 3. Use `edit_project_string` for name, description, or context changes.
 4. Use `set_project_string_translation` for translation text changes.
